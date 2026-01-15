@@ -11,9 +11,9 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 app = Flask(__name__)
 
 # --- 設定區 ---
-LINE_CHANNEL_ACCESS_TOKEN = '你的_LINE_CHANNEL_ACCESS_TOKEN'
-LINE_CHANNEL_SECRET = '你的_LINE_CHANNEL_SECRET'
-GEMINI_API_KEY = '你的_GEMINI_API_KEY'
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
+LINE_CHANNEL_SECRET = os.getenv('LINE_CHANNEL_SECRET')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
