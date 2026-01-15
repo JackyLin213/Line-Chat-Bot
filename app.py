@@ -3,7 +3,7 @@ import google.generativeai as genai
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, SourceGroup, SourceRoom, JoinEvent
 
 # 【修改 1】在這裡引入安全設定相關的模組
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
@@ -76,11 +76,37 @@ def get_gemini_response(user_text):
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_msg = event.message.text
+    user_msg = event.message.text.strip() # 去除前後空白
+    
+    # 判斷是否為群組或多人聊天室
+    is_group = event.source.type == 'group' or event.source.type == 'room'
+    
+    # --- 群組內的過濾邏輯 ---
+    if is_group:
+        # 設定「召喚關鍵字」，符合才回應
+        # 這裡設定必須包含 "@小姐姐" 三個字她才理你
+        if "@小姐姐" not in user_msg:
+            return # 直接結束函式，不回應
+            
+        # (選用) 如果你希望她回應時不要重複關鍵字，可以把 "姊姊" 兩個字拿掉
+        # user_msg = user_msg.replace("@小姐姐", "")
+
+    # --- 呼叫 Gemini (維持原本邏輯) ---
     reply_text = get_gemini_response(user_msg)
+
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_text)
+    )
+
+@handler.add(JoinEvent)
+def handle_join(event):
+    # 設定進場台詞，符合她的人設
+    welcome_msg = "既然誠心誠意地邀請我了，那我就勉強加入吧。\n想跟我說話記得叫聲「@小姐姐」，否則我是不會理你的。"
+    
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=welcome_msg)
     )
 
 if __name__ == "__main__":
