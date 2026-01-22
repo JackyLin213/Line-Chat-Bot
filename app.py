@@ -21,7 +21,7 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 genai.configure(api_key=GEMINI_API_KEY)
 
 model = genai.GenerativeModel(
-    'gemini-2.5-flash',
+    'gemini-3-flash',
     system_instruction="""
     【個性設定】
     外表與氣質：
