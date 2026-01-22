@@ -68,9 +68,24 @@ def get_gemini_response(user_text):
                 temperature=1.0 
             )
         )
-        return response.text
+
+        # 【修改點】先檢查是否有回傳內容 (candidates)
+        if response.candidates:
+             # 進一步檢查是否被安全政策擋住 (即使有 candidate 有時也會標記 safety)
+            if response.candidates[0].finish_reason:
+                # 如果 finish_reason 不是 STOP，代表可能因安全理由結束
+                reason = response.candidates[0].finish_reason
+                # 這裡可以 print 出來 debug，例如 1=STOP, 3=SAFETY, 4=RECITATION
+                print(f"Finish Reason: {reason}") 
+                
+            return response.text
+        else:
+            # 如果 candidates 是空的，通常是因為 PromptFeedback 擋下了請求
+            print("Response blocked by safety filters (No candidates).")
+            print(response.prompt_feedback) # 印出原因以便除錯
+            return "（系統提示：話題過於敏感，已被 Google 安全機制攔截，無法回應。）"
+
     except Exception as e:
-        # 如果因為安全限制被擋，通常 error 會包含 "finish_reason: SAFETY"
         print(f"Gemini Error: {e}")
         return "抱歉，我目前腦袋有點打結，或者話題太敏感我無法回答。"
 
